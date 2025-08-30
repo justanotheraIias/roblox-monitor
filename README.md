@@ -26,7 +26,7 @@ Here is a step-by-step
 2. Open up developer console (F12)
 3. Go to Elements tab
 4. Search(ctrl + F) for 'universeId=' 
-5. Copy the number after the 'universeId=' and input in your programm
+5. Copy the number after the 'universeId=' and input in your programm (in my case 6331902150)
 6. give this repo a star
 
 # TODO list (or what i want to get assistance on)
