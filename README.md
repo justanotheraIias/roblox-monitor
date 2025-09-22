@@ -11,6 +11,11 @@ and i wasn't that sleepy at a certian night so yeah, here we are.
 # How to get the programm?
 There are 2 ways:
 1. Clone the repo and build it yourself (it has a cool way to build in VSCode but you need g++)
+    1.1. Open root folder of the file in VSCode
+    1.2. Click on the search tab on the top of the UI
+    1.3. Select Run Task
+    1.4. Select Build Roblox Monitor
+    1.5. Build should appear in the build folder
 2. Get the .exe if i'll understand how to make release notes
 
 # How to use this programm?
@@ -30,7 +35,5 @@ Here is a step-by-step
 6. give this repo a star
 
 # TODO list (or what i want to get assistance on)
-1. Fix the bug when not in comparison mode outputs logs twice
-2. Fix the issue that after the set amount of minutes passes it outputs the same logs in a minute and then outputs final logs
-3. Make so that in comparison mode it will output first game's in real time logs first than random (optional)
-4. whatever will come in my mind later on
+1. Add a mode that will rather count the updates of CCU rather than minutes passed
+2. i dunno yet lmao
