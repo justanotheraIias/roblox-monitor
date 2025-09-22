@@ -118,7 +118,6 @@ public:
     }
 
     // Print game info table
-    // Print game info table
     void printGameInfoTable(const GameInfo& info, WORD color = 11) {
         setColor(color);
         std::cout << std::string(60, '=') << std::endl;
@@ -185,54 +184,39 @@ public:
     void setSkipInfoPrint(bool skip) { skipInfoPrint = skip; }
 
     // Store logs instead of printing
-    void startMonitoring(const std::string& logPrefix = "", WORD logColor = 11) {
+    void startMonitoring(const std::string& logPrefix = "", WORD logColor = 11, bool liveOutput = true) {
         if (!skipInfoPrint) {
             GameInfo info = fetchGameInfo();
             printGameInfoTable(info);
         }
 
         int minute = 0;
-        int last_minute = -1;
-        // Efficiently wait until the start of the next minute
-        auto now = std::chrono::system_clock::now();
-        auto next_minute = std::chrono::time_point_cast<std::chrono::minutes>(now) + std::chrono::minutes(1);
-        std::this_thread::sleep_until(next_minute);
 
-        // Update last_minute after waking up
-        auto time_t_now = std::chrono::system_clock::to_time_t(next_minute);
-        auto tm_now = *std::localtime(&time_t_now);
-        last_minute = tm_now.tm_min;
-
+        std::cout << "Waiting 1 minute before first sample...\n";
+        std::this_thread::sleep_for(std::chrono::seconds(60));
 
         while (minute < monitorMinutes) {
             GameData data = fetchGameData();
             dataPoints.push_back(data);
-     
-            // Prepare log line as string
+
             std::ostringstream oss;
             oss << logPrefix << " Minute " << (minute + 1) << "/" << monitorMinutes << " - "
                 << "CCU: " << data.ccu
                 << ", Rating: " << std::fixed << std::setprecision(1) << data.rating << "%"
                 << " [" << data.timestamp << "]";
 
-            // Print to console (real-time)
-            setColor(logColor);
-            std::cout << oss.str() << std::endl;
-            resetColor();
+            if (liveOutput) {
+                setColor(logColor);
+                std::cout << oss.str() << std::endl;
+                resetColor();
+            }
 
-            // Store in logLines for later retrieval
             logLines.push_back(oss.str());
-
             minute++;
 
-            auto now = std::chrono::system_clock::now();
-            auto next_minute = std::chrono::time_point_cast<std::chrono::minutes>(now) + std::chrono::minutes(1);
-            std::this_thread::sleep_until(next_minute);
-
-            // Update last_minute
-            auto time_t_now = std::chrono::system_clock::to_time_t(next_minute);
-            auto tm_now = *std::localtime(&time_t_now);
-            last_minute = tm_now.tm_min;
+            if (minute < monitorMinutes) {
+                std::this_thread::sleep_for(std::chrono::seconds(60)); // fixed interval
+            }
         }
         // Do NOT call showResults() here!
     }
@@ -442,27 +426,11 @@ int main() {
 
         // Monitor both games in parallel, store logs only
         std::thread t1([&monitor1]() { monitor1.startMonitoring("[GAME 1]", 9); }); // Blue
-        std::thread t2([&monitor2]() { monitor2.startMonitoring("[GAME 2]", 12); }); // Red
+        std::thread t2([&monitor2]() { 
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            monitor2.startMonitoring("[GAME 2]", 12); }); // Red
         t1.join();
         t2.join();
-
-        // Print logs in alternating order, always GAME 1 first, with a small delay for sync
-        const auto& logs1 = monitor1.getLogLines();
-        const auto& logs2 = monitor2.getLogLines();
-        size_t maxLen = std::max(logs1.size(), logs2.size());
-        for (size_t i = 0; i < maxLen; ++i) {
-            if (i < logs1.size()) {
-                setColor(9); // Blue for GAME 1
-                std::cout << logs1[i] << std::endl;
-                resetColor();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // 1 second delay
-            }
-            if (i < logs2.size()) {
-                setColor(12); // Red for GAME 2
-                std::cout << logs2[i] << std::endl;
-                resetColor();
-            }
-        }
 
         // Now print results for each game, clearly separated
         setColor(11);
@@ -561,6 +529,7 @@ int main() {
         RobloxGameMonitor monitor(gameId, minutes);
         auto info = monitor.fetchGameInfo();
         monitor.printGameInfoTable(info);
+        monitor.setSkipInfoPrint(true);
         monitor.startMonitoring(); // No prefix, default color (cyan)
         // Print logs after monitoring
         const auto& logs = monitor.getLogLines();
